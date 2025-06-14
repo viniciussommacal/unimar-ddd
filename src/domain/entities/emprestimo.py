@@ -5,10 +5,6 @@ import uuid
 
 @dataclass
 class Emprestimo:
-    """
-    Entity Emprestimo (Aggregate Root)
-    Aplicando DDD: Agregado que mantém consistência
-    """
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     livro_id: str = ""
     usuario_id: str = ""
@@ -24,10 +20,6 @@ class Emprestimo:
             raise ValueError("ID do usuário é obrigatório")
     
     def devolver(self) -> float:
-        """
-        Comportamento de domínio: devolver livro e calcular multa
-        Aplicando DDD: Lógica de negócio complexa no agregado
-        """
         if self.data_devolucao_real:
             raise ValueError("Livro já foi devolvido")
         
@@ -36,10 +28,6 @@ class Emprestimo:
         return self.multa
     
     def _calcular_multa(self) -> float:
-        """
-        Regra de negócio: calcular multa por atraso
-        R$ 1,00 por dia de atraso
-        """
         if not self.data_devolucao_real:
             return 0.0
         
@@ -47,22 +35,17 @@ class Emprestimo:
             return 0.0
         
         dias_atraso = (self.data_devolucao_real - self.data_devolucao_prevista).days
-        return dias_atraso * 1.0  # R$ 1,00 por dia
+        return dias_atraso * 1.0 
     
     @property
     def esta_em_atraso(self) -> bool:
-        """
-        Propriedade calculada: verifica se está em atraso
-        """
+ 
         if self.data_devolucao_real:
-            return False  # Já foi devolvido
-        return datetime.utcnow() > self.data_devolucao_prevista
+            return False 
+        return datetime.now() > self.data_devolucao_prevista
     
     @property
     def dias_atraso(self) -> int:
-        """
-        Propriedade calculada: dias de atraso
-        """
         if not self.esta_em_atraso:
             return 0
         return (datetime.utcnow() - self.data_devolucao_prevista).days
