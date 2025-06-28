@@ -54,6 +54,7 @@ class Usuario:
     id: str
     nome: str
     email: Email
+    creditos: float = 0.0
     ativo: bool = True
     
     def __post_init__(self):
@@ -157,5 +158,5 @@ class Doacao:
             self.data_doacao = datetime.now()
     
 
-    def processar_creditos(self, valor: float) -> None:
-        self.creditos += valor
+    def processar_creditos(self) -> None:
+        self.creditos += 20.0  # Exemplo: cada doação gera 20 créditos para o usuário

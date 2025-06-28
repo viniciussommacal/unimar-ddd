@@ -25,6 +25,7 @@ class UsuarioDTO:
     nome: str
     email: str
     id: Optional[str] = None
+    creditos: Optional[float] = 0.0
     ativo: Optional[bool] = True
 
 
