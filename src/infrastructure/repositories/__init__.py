@@ -1,0 +1,238 @@
+# Infrastructure Layer - Repository Implementations
+
+from typing import List, Optional
+from src.domain.entities import Livro, Usuario, Emprestimo
+from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository
+from src.domain.value_objects.isbn import ISBN
+from src.domain.value_objects.email import Email
+from src.infrastructure.database.models import LivroModel, UsuarioModel, EmprestimoModel
+from src.models.user import db
+from datetime import datetime
+
+
+class SQLAlchemyLivroRepository(LivroRepository):
+    """
+    Implementação concreta do LivroRepository usando SQLAlchemy
+    Aplicando SOLID: Dependency Inversion Principle - implementação depende da abstração
+    Aplicando DDD: Repository Pattern - implementação na infraestrutura
+    """
+    
+    def salvar(self, livro: Livro) -> None:
+        """Salva um livro no banco de dados"""
+        livro_model = LivroModel.query.filter_by(id=livro.id).first()
+        
+        if livro_model:
+            # Atualizar existente
+            livro_model.titulo = livro.titulo
+            livro_model.autor = livro.autor
+            livro_model.isbn = str(livro.isbn)
+            livro_model.disponivel = livro.disponivel
+        else:
+            # Criar novo
+            livro_model = LivroModel(
+                id=livro.id,
+                titulo=livro.titulo,
+                autor=livro.autor,
+                isbn=str(livro.isbn),
+                disponivel=livro.disponivel
+            )
+            db.session.add(livro_model)
+        
+        db.session.commit()
+    
+    def buscar_por_id(self, id: str) -> Optional[Livro]:
+        """Busca livro por ID"""
+        livro_model = LivroModel.query.filter_by(id=id).first()
+        if not livro_model:
+            return None
+        
+        return self._model_para_entidade(livro_model)
+    
+    def buscar_por_isbn(self, isbn: str) -> Optional[Livro]:
+        """Busca livro por ISBN"""
+        livro_model = LivroModel.query.filter_by(isbn=isbn).first()
+        if not livro_model:
+            return None
+        
+        return self._model_para_entidade(livro_model)
+    
+    def buscar_todos(self) -> List[Livro]:
+        """Busca todos os livros"""
+        livros_model = LivroModel.query.all()
+        return [self._model_para_entidade(livro) for livro in livros_model]
+    
+    def buscar_disponiveis(self) -> List[Livro]:
+        """Busca livros disponíveis"""
+        livros_model = LivroModel.query.filter_by(disponivel=True).all()
+        return [self._model_para_entidade(livro) for livro in livros_model]
+    
+    def deletar(self, id: str) -> None:
+        """Deleta um livro"""
+        livro_model = LivroModel.query.filter_by(id=id).first()
+        if livro_model:
+            db.session.delete(livro_model)
+            db.session.commit()
+    
+    def _model_para_entidade(self, livro_model: LivroModel) -> Livro:
+        """Converte model para entidade de domínio"""
+        return Livro(
+            id=livro_model.id,
+            titulo=livro_model.titulo,
+            autor=livro_model.autor,
+            isbn=ISBN(livro_model.isbn),
+            disponivel=livro_model.disponivel
+        )
+
+
+class SQLAlchemyUsuarioRepository(UsuarioRepository):
+    """
+    Implementação concreta do UsuarioRepository usando SQLAlchemy
+    """
+    
+    def salvar(self, usuario: Usuario) -> None:
+        """Salva um usuário no banco de dados"""
+        usuario_model = UsuarioModel.query.filter_by(id=usuario.id).first()
+        
+        if usuario_model:
+            # Atualizar existente
+            usuario_model.nome = usuario.nome
+            usuario_model.email = str(usuario.email)
+            usuario_model.ativo = usuario.ativo
+        else:
+            # Criar novo
+            usuario_model = UsuarioModel(
+                id=usuario.id,
+                nome=usuario.nome,
+                email=str(usuario.email),
+                ativo=usuario.ativo
+            )
+            db.session.add(usuario_model)
+        
+        db.session.commit()
+    
+    def buscar_por_id(self, id: str) -> Optional[Usuario]:
+        """Busca usuário por ID"""
+        usuario_model = UsuarioModel.query.filter_by(id=id).first()
+        if not usuario_model:
+            return None
+        
+        return self._model_para_entidade(usuario_model)
+    
+    def buscar_por_email(self, email: str) -> Optional[Usuario]:
+        """Busca usuário por email"""
+        usuario_model = UsuarioModel.query.filter_by(email=email).first()
+        if not usuario_model:
+            return None
+        
+        return self._model_para_entidade(usuario_model)
+    
+    def buscar_todos(self) -> List[Usuario]:
+        """Busca todos os usuários"""
+        usuarios_model = UsuarioModel.query.all()
+        return [self._model_para_entidade(usuario) for usuario in usuarios_model]
+    
+    def deletar(self, id: str) -> None:
+        """Deleta um usuário"""
+        usuario_model = UsuarioModel.query.filter_by(id=id).first()
+        if usuario_model:
+            db.session.delete(usuario_model)
+            db.session.commit()
+    
+    def _model_para_entidade(self, usuario_model: UsuarioModel) -> Usuario:
+        """Converte model para entidade de domínio"""
+        return Usuario(
+            id=usuario_model.id,
+            nome=usuario_model.nome,
+            email=Email(usuario_model.email),
+            ativo=usuario_model.ativo
+        )
+
+
+class SQLAlchemyEmprestimoRepository(EmprestimoRepository):
+    """
+    Implementação concreta do EmprestimoRepository usando SQLAlchemy
+    """
+    
+    def salvar(self, emprestimo: Emprestimo) -> None:
+        """Salva um empréstimo no banco de dados"""
+        emprestimo_model = EmprestimoModel.query.filter_by(id=emprestimo.id).first()
+        
+        if emprestimo_model:
+            # Atualizar existente
+            emprestimo_model.livro_id = emprestimo.livro_id
+            emprestimo_model.usuario_id = emprestimo.usuario_id
+            emprestimo_model.data_emprestimo = emprestimo.data_emprestimo
+            emprestimo_model.data_devolucao_prevista = emprestimo.data_devolucao_prevista
+            emprestimo_model.data_devolucao_real = emprestimo.data_devolucao_real
+            emprestimo_model.multa = emprestimo.multa
+        else:
+            # Criar novo
+            emprestimo_model = EmprestimoModel(
+                id=emprestimo.id,
+                livro_id=emprestimo.livro_id,
+                usuario_id=emprestimo.usuario_id,
+                data_emprestimo=emprestimo.data_emprestimo,
+                data_devolucao_prevista=emprestimo.data_devolucao_prevista,
+                data_devolucao_real=emprestimo.data_devolucao_real,
+                multa=emprestimo.multa
+            )
+            db.session.add(emprestimo_model)
+        
+        db.session.commit()
+    
+    def buscar_por_id(self, id: str) -> Optional[Emprestimo]:
+        """Busca empréstimo por ID"""
+        emprestimo_model = EmprestimoModel.query.filter_by(id=id).first()
+        if not emprestimo_model:
+            return None
+        
+        return self._model_para_entidade(emprestimo_model)
+    
+    def buscar_por_usuario(self, usuario_id: str) -> List[Emprestimo]:
+        """Busca empréstimos de um usuário"""
+        emprestimos_model = EmprestimoModel.query.filter_by(usuario_id=usuario_id).all()
+        return [self._model_para_entidade(emp) for emp in emprestimos_model]
+    
+    def buscar_por_livro(self, livro_id: str) -> List[Emprestimo]:
+        """Busca empréstimos de um livro"""
+        emprestimos_model = EmprestimoModel.query.filter_by(livro_id=livro_id).all()
+        return [self._model_para_entidade(emp) for emp in emprestimos_model]
+    
+    def buscar_ativos(self) -> List[Emprestimo]:
+        """Busca empréstimos ativos (não devolvidos)"""
+        emprestimos_model = EmprestimoModel.query.filter_by(data_devolucao_real=None).all()
+        return [self._model_para_entidade(emp) for emp in emprestimos_model]
+    
+    def buscar_em_atraso(self) -> List[Emprestimo]:
+        """Busca empréstimos em atraso"""
+        agora = datetime.now()
+        emprestimos_model = EmprestimoModel.query.filter(
+            EmprestimoModel.data_devolucao_real.is_(None),
+            EmprestimoModel.data_devolucao_prevista < agora
+        ).all()
+        return [self._model_para_entidade(emp) for emp in emprestimos_model]
+    
+    def buscar_todos(self) -> List[Emprestimo]:
+        """Busca todos os empréstimos"""
+        emprestimos_model = EmprestimoModel.query.all()
+        return [self._model_para_entidade(emp) for emp in emprestimos_model]
+    
+    def deletar(self, id: str) -> None:
+        """Deleta um empréstimo"""
+        emprestimo_model = EmprestimoModel.query.filter_by(id=id).first()
+        if emprestimo_model:
+            db.session.delete(emprestimo_model)
+            db.session.commit()
+    
+    def _model_para_entidade(self, emprestimo_model: EmprestimoModel) -> Emprestimo:
+        """Converte model para entidade de domínio"""
+        return Emprestimo(
+            id=emprestimo_model.id,
+            livro_id=emprestimo_model.livro_id,
+            usuario_id=emprestimo_model.usuario_id,
+            data_emprestimo=emprestimo_model.data_emprestimo,
+            data_devolucao_prevista=emprestimo_model.data_devolucao_prevista,
+            data_devolucao_real=emprestimo_model.data_devolucao_real,
+            multa=emprestimo_model.multa
+        )
+
