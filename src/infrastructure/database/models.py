@@ -57,3 +57,20 @@ class EmprestimoModel(db.Model):
     def __repr__(self):
         return f'<Emprestimo {self.id}>'
 
+class DoacaoModel(db.Model):
+    """
+    Model SQLAlchemy para Doação
+    """
+    __tablename__ = 'doacoes'
+    id = db.Column(db.String(36), primary_key=True)
+    livro_id = db.Column(db.String(36), db.ForeignKey('livros.id'), nullable=False)
+    usuario_id = db.Column(db.String(36), db.ForeignKey('usuarios.id'), nullable=False)
+    data_doacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    creditos = db.Column(db.Float, default=0.0, nullable=False)
+    
+    # Relacionamentos
+    livro = db.relationship('LivroModel', backref='doacoes')
+    usuario = db.relationship('UsuarioModel', backref='doacoes')
+    def __repr__(self):
+        return f'<Doacao {self.id}>'    
+

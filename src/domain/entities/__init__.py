@@ -138,3 +138,24 @@ class Emprestimo:
             return False
         return self.id == other.id
 
+@dataclass
+class Doacao:
+    """
+    Entity: Doacao
+    Representa uma doação de livro.
+    """
+    id: str
+    livro_id: str
+    usuario_id: str
+    data_doacao: datetime
+    creditos: float = 0.0
+
+    def __post_init__(self):
+        if not self.id:
+            self.id = str(uuid4())
+        if not self.data_doacao:
+            self.data_doacao = datetime.now()
+    
+
+    def processar_creditos(self, valor: float) -> None:
+        self.creditos += valor
