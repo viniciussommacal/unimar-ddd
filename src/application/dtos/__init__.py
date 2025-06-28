@@ -1,4 +1,7 @@
-# Application Layer - DTOs (Data Transfer Objects)
+"""
+DTOs (Data Transfer Objects) - Camada de Aplicação
+Versão Completa com todos os DTOs necessários para os controllers
+"""
 
 from dataclasses import dataclass, field
 from typing import Optional, List
@@ -62,7 +65,20 @@ class DoacaoDTO:
     data_doacao: Optional[datetime] = None
     observacoes: Optional[str] = None
 
-# DTOs para requests/responses da API
+# DTOs para requests da API (ESTES ESTAVAM FALTANDO!)
+@dataclass
+class EmprestimoRequestDTO:
+    """DTO para request de empréstimo"""
+    livro_id: str
+    usuario_id: str
+
+@dataclass
+class DevolucaoRequestDTO:
+    """DTO para request de devolução"""
+    emprestimo_id: str
+    data_devolucao: Optional[datetime] = None
+    observacoes: Optional[str] = None
+
 @dataclass
 class CriarLivroRequest:
     """Request para criar livro"""
