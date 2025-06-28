@@ -1,11 +1,11 @@
 # Application Layer - Use Cases
 
 from typing import List, Optional
-from src.domain.entities import Livro, Usuario, Emprestimo, Doacao
-from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository
+from src.domain.entities import Livro, Usuario, Emprestimo, Doacao, Horas
+from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository, HorasRepository
 from src.domain.value_objects.isbn import ISBN
 from src.domain.value_objects.email import Email
-from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoDTO, DoacaoDTO
+from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoDTO, DoacaoDTO, HorasDTO
 
 class CriarLivroUseCase:
     """
@@ -278,6 +278,45 @@ class DoarLivroUseCase:
 
         # Atualizar créditos do usuário
         usuario.creditos += doacao.creditos
+        self._usuario_repository.salvar(usuario)
+        
+        return usuario.creditos
+    
+class DoarHorasUseCase:
+    """
+    Use Case: Doar Horas
+    Aplicar DDD: Orquestra doação de horas, gerando créditos para o usuário'
+    """
+
+    def __init__(
+        self,
+        horas_repository: HorasRepository,
+        usuario_repository: UsuarioRepository
+    ):
+        self._horas_repository = horas_repository
+        self._usuario_repository = usuario_repository
+    
+    def executar(self, dto: HorasDTO) -> float:
+        """
+        Executa a doação de horas
+        """
+        # Buscar usuário
+        usuario = self._usuario_repository.buscar_por_id(dto.usuario_id)
+        if not usuario:
+            raise ValueError(f"Usuário não encontrado: {dto.usuario_id}")
+        
+        # Criar doação de horas
+        horas = Horas(
+            id="",  # Será gerado automaticamente
+            usuario_id=dto.usuario_id,
+            horas=dto.horas
+        )
+        
+        # Salvar no repositório
+        self._horas_repository.salvar(horas)
+
+        # Atualizar créditos do usuário
+        usuario.creditos += horas.creditos 
         self._usuario_repository.salvar(usuario)
         
         return usuario.creditos

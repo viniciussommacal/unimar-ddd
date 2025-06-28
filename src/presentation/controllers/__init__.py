@@ -3,13 +3,12 @@
 from flask import Blueprint, request, jsonify
 from src.application.use_cases import (
     CriarLivroUseCase, BuscarLivrosUseCase, CriarUsuarioUseCase,
-    EmprestarLivroUseCase, DevolverLivroUseCase, ListarEmprestimosUseCase, DoarLivroUseCase
+    EmprestarLivroUseCase, DevolverLivroUseCase, ListarEmprestimosUseCase, DoarLivroUseCase, DoarHorasUseCase
 )
-from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoRequestDTO, DevolucaoRequestDTO, DoacaoDTO
+from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoRequestDTO, DevolucaoRequestDTO, DoacaoDTO, HorasDTO
 from src.infrastructure.repositories import (
-    SQLAlchemyLivroRepository, SQLAlchemyUsuarioRepository, SQLAlchemyEmprestimoRepository, SQLAlchemyDoacaoRepository
+    SQLAlchemyLivroRepository, SQLAlchemyUsuarioRepository, SQLAlchemyEmprestimoRepository, SQLAlchemyDoacaoRepository, SQLAlchemyHorasRepository
 )
-
 
 # Criar blueprint para a API da biblioteca
 biblioteca_bp = Blueprint('biblioteca', __name__)
@@ -19,7 +18,7 @@ livro_repository = SQLAlchemyLivroRepository()
 usuario_repository = SQLAlchemyUsuarioRepository()
 emprestimo_repository = SQLAlchemyEmprestimoRepository()
 doacao_repository = SQLAlchemyDoacaoRepository()
-
+horas_repository = SQLAlchemyHorasRepository()
 
 @biblioteca_bp.route('/livros', methods=['POST'])
 def criar_livro():
@@ -55,7 +54,6 @@ def criar_livro():
     except Exception as e:
         return jsonify({'erro': 'Erro interno do servidor'}), 500
 
-
 @biblioteca_bp.route('/livros', methods=['GET'])
 def listar_livros():
     """
@@ -86,7 +84,6 @@ def listar_livros():
         
     except Exception as e:
         return jsonify({'erro': 'Erro interno do servidor'}), 500
-
 
 @biblioteca_bp.route('/usuarios', methods=['POST'])
 def criar_usuario():
@@ -120,7 +117,6 @@ def criar_usuario():
     except Exception as e:
         return jsonify({'erro': 'Erro interno do servidor'}), 500
 
-
 @biblioteca_bp.route('/emprestimos', methods=['POST'])
 def emprestar_livro():
     """
@@ -147,7 +143,6 @@ def emprestar_livro():
     except Exception as e:
         return jsonify({'erro': 'Erro interno do servidor'}), 500
 
-
 @biblioteca_bp.route('/emprestimos/<emprestimo_id>/devolver', methods=['PUT'])
 def devolver_livro(emprestimo_id):
     """
@@ -167,7 +162,6 @@ def devolver_livro(emprestimo_id):
         return jsonify({'erro': str(e)}), 400
     except Exception as e:
         return jsonify({'erro': 'Erro interno do servidor'}), 500
-
 
 @biblioteca_bp.route('/emprestimos', methods=['GET'])
 def listar_emprestimos():
@@ -238,6 +232,32 @@ def listar_doacoes():
     except Exception as e:
         return jsonify({'erro': 'Erro interno do servidor'}), 500
 
+@biblioteca_bp.route('/doacaoes/horas', methods=['POST'])
+def doar_horas():
+    """
+    Endpoint para doar horas
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ('usuario_id', 'horas')):
+            return jsonify({'erro': 'Dados obrigatórios: usuario_id, horas'}), 400
+        # Criar DTO
+        horas_dto = HorasDTO(
+            usuario_id=data['usuario_id'],
+            horas=data['horas']
+        )
+        # Executar use case
+        use_case = DoarHorasUseCase(usuario_repository, horas_repository)
+        creditos = use_case.executar(horas_dto)
+        return jsonify({
+            'mensagem': 'Horas doadas com sucesso',
+            'creditos': creditos
+        }), 201
+    except ValueError as e:
+        return jsonify({'erro': str(e)}), 400
+    except Exception as e:
+        return jsonify({'erro': 'Erro interno do servidor'}), 500   
 
 @biblioteca_bp.route('/health', methods=['GET'])
 def health_check():

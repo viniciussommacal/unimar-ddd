@@ -167,3 +167,14 @@ def emprestimo_to_dto(emprestimo) -> EmprestimoDTO:
         devolvido=emprestimo.devolvido
     )
 
+@dataclass
+class HorasDTO:
+    """DTO para transferência de dados de Horas"""
+    # Campos obrigatórios primeiro
+    usuario_id: str
+    horas: float
+    
+    # Campos opcionais depois
+    id: Optional[str] = None
+    data: Optional[datetime] = None
+    creditos: Optional[float] = None
