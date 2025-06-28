@@ -60,3 +60,14 @@ class DevolucaoRequestDTO:
     """
     emprestimo_id: str
 
+@dataclass
+class DoacaoDTO:
+    """
+    DTO para requisição de devolução
+    """
+    id: Optional[str] = None
+    livro_id: str
+    usuario_id: str
+    data_doacao: str
+    creditos: Optional[float] = 0.0
+

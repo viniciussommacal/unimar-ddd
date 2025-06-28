@@ -3,11 +3,11 @@
 from flask import Blueprint, request, jsonify
 from src.application.use_cases import (
     CriarLivroUseCase, BuscarLivrosUseCase, CriarUsuarioUseCase,
-    EmprestarLivroUseCase, DevolverLivroUseCase, ListarEmprestimosUseCase
+    EmprestarLivroUseCase, DevolverLivroUseCase, ListarEmprestimosUseCase, DoarLivroUseCase
 )
-from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoRequestDTO, DevolucaoRequestDTO
+from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoRequestDTO, DevolucaoRequestDTO, DoacaoDTO
 from src.infrastructure.repositories import (
-    SQLAlchemyLivroRepository, SQLAlchemyUsuarioRepository, SQLAlchemyEmprestimoRepository
+    SQLAlchemyLivroRepository, SQLAlchemyUsuarioRepository, SQLAlchemyEmprestimoRepository, SQLAlchemyDoacaoRepository
 )
 
 
@@ -18,6 +18,7 @@ biblioteca_bp = Blueprint('biblioteca', __name__)
 livro_repository = SQLAlchemyLivroRepository()
 usuario_repository = SQLAlchemyUsuarioRepository()
 emprestimo_repository = SQLAlchemyEmprestimoRepository()
+doacao_repository = SQLAlchemyDoacaoRepository()
 
 
 @biblioteca_bp.route('/livros', methods=['POST'])
@@ -201,6 +202,39 @@ def listar_emprestimos():
             'total': len(emprestimos_dict)
         }), 200
         
+    except Exception as e:
+        return jsonify({'erro': 'Erro interno do servidor'}), 500
+
+@biblioteca_bp.route('/doacoes', methods=['POST'])
+def listar_doacoes():
+    """
+    Endpoint para doar um livro
+    """
+    try:
+        data = request.get_json()
+        
+        # Validar dados de entrada
+        if not data or not all(k in data for k in ('livro_id', 'usuario_id', 'data_doacao')):
+            return jsonify({'erro': 'Dados obrigatórios: livro_id, usuario_id, data_doacao'}), 400
+        
+        # Criar DTO
+        doacao_dto = DoacaoDTO(
+            livro_id=data['livro_id'],
+            usuario_id=data['usuario_id'],
+            data_doacao=data['data_doacao']
+        )
+        
+        # Executar use case
+        use_case = DoarLivroUseCase(doacao_repository)
+        doacao_id = use_case.executar(doacao_dto)
+        
+        return jsonify({
+            'mensagem': 'Livro doado com sucesso',
+            'doacao_id': doacao_id
+        }), 201
+        
+    except ValueError as e:
+        return jsonify({'erro': str(e)}), 400
     except Exception as e:
         return jsonify({'erro': 'Erro interno do servidor'}), 500
 

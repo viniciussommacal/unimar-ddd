@@ -1,11 +1,11 @@
 # Infrastructure Layer - Repository Implementations
 
 from typing import List, Optional
-from src.domain.entities import Livro, Usuario, Emprestimo
-from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository
+from src.domain.entities import Livro, Usuario, Emprestimo, Doacao
+from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository
 from src.domain.value_objects.isbn import ISBN
 from src.domain.value_objects.email import Email
-from src.infrastructure.database.models import LivroModel, UsuarioModel, EmprestimoModel
+from src.infrastructure.database.models import LivroModel, UsuarioModel, EmprestimoModel, DoacaoModel
 from src.models.user import db
 from datetime import datetime
 
@@ -236,3 +236,62 @@ class SQLAlchemyEmprestimoRepository(EmprestimoRepository):
             multa=emprestimo_model.multa
         )
 
+class SQLAlchemyDoacaoRepository(DoacaoRepository):
+    """
+    Implementação concreta do DoacaoRepository usando SQLAlchemy
+    """
+
+    def salvar(self, doacao: Doacao) -> None:
+        """Salva uma doação no banco de dados"""
+        doacao_model = DoacaoModel.query.filter_by(id=doacao.id).first()
+        
+        if doacao_model:
+            # Atualizar existente
+            doacao_model.livro_id = doacao.livro_id
+            doacao_model.usuario_id = doacao.usuario_id
+            doacao_model.data_doacao = doacao.data_doacao
+            doacao_model.creditos = doacao.creditos
+        else:
+            # Criar novo
+            doacao_model = DoacaoModel(
+                id=doacao.id,
+                livro_id=doacao.livro_id,
+                usuario_id=doacao.usuario_id,
+                data_doacao=doacao.data_doacao,
+                creditos=doacao.creditos
+            )
+            db.session.add(doacao_model)
+        
+        db.session.commit()
+    
+    def buscar_por_id(self, id: str) -> Doacao:
+        """Busca doação por ID"""
+        doacao_model = DoacaoModel.query.filter_by(id=id).first()
+        if not doacao_model:
+            return None
+        
+        return self._model_para_entidade(doacao_model)
+    
+    def buscar_por_usuario(self, usuario_id: str) -> List[Doacao]:
+        """Busca doações de um usuário"""
+        doacoes_model = DoacaoModel.query.filter_by(usuario_id=usuario_id).all()
+        return [self._model_para_entidade(d) for d in doacoes_model]
+    
+    def buscar_por_livro(self, livro_id: str) -> Doacao:
+        """Busca doações de um livro"""
+        doacoes_model = DoacaoModel.query.filter_by(livro_id=livro_id).first()
+        if not doacoes_model:
+            return None
+        return self._model_para_entidade(doacoes_model)
+    
+    def buscar_todos(self) -> List[Doacao]:
+        """Busca todas as doações"""
+        doacoes_model = DoacaoModel.query.all()
+        return [self._model_para_entidade(d) for d in doacoes_model]
+    
+    def deletar(self, id: str) -> None:
+        """Deleta uma doação"""
+        doacao_model = DoacaoModel.query.filter_by(id=id).first()
+        if doacao_model:
+            db.session.delete(doacao_model)
+            db.session.commit

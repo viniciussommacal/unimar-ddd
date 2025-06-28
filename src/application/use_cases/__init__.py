@@ -1,12 +1,11 @@
 # Application Layer - Use Cases
 
 from typing import List, Optional
-from src.domain.entities import Livro, Usuario, Emprestimo
-from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository
+from src.domain.entities import Livro, Usuario, Emprestimo, Doacao
+from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository
 from src.domain.value_objects.isbn import ISBN
 from src.domain.value_objects.email import Email
-from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoDTO
-
+from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoDTO, DoacaoDTO
 
 class CriarLivroUseCase:
     """
@@ -41,7 +40,6 @@ class CriarLivroUseCase:
         
         return livro.id
 
-
 class BuscarLivrosUseCase:
     """
     Use Case: Buscar Livros
@@ -69,7 +67,6 @@ class BuscarLivrosUseCase:
             isbn=str(livro.isbn),
             disponivel=livro.disponivel
         )
-
 
 class CriarUsuarioUseCase:
     """
@@ -100,7 +97,6 @@ class CriarUsuarioUseCase:
         self._usuario_repository.salvar(usuario)
         
         return usuario.id
-
 
 class EmprestarLivroUseCase:
     """
@@ -154,10 +150,10 @@ class EmprestarLivroUseCase:
         
         return emprestimo.id
 
-
 class DevolverLivroUseCase:
     """
     Use Case: Devolver Livro
+    Aplicando DDD: Orquestra devolução gerando multa para o usuário
     """
     
     def __init__(
@@ -193,7 +189,6 @@ class DevolverLivroUseCase:
         
         return emprestimo.multa
 
-
 class ListarEmprestimosUseCase:
     """
     Use Case: Listar Empréstimos
@@ -228,3 +223,46 @@ class ListarEmprestimosUseCase:
             dias_atraso=emprestimo.dias_atraso
         )
 
+class DoarLivroUseCase:
+    """
+    Use Case: Doar Livro
+    Aplicar DDD: Orquestra doação, gerando créditos para o usuário'
+    """
+
+    def __init__(
+        self,
+        livro_repository: LivroRepository,
+        usuario_repository: UsuarioRepository,
+        doacao_repository: DoacaoRepository
+    ):
+        self._livro_repository = livro_repository
+        self._usuario_repository = usuario_repository
+        self._doacao_repository = doacao_repository
+    
+    def executar(self, dto: DoacaoDTO) -> float:
+        """
+        Executa a doação de um livro
+        """
+        # Buscar livro
+        livro = self._livro_repository.buscar_por_id(dto.livro_id)
+        if not livro:
+            raise ValueError(f"Livro não encontrado: {dto.livro_id}")
+        
+        # Buscar usuário
+        usuario = self._usuario_repository.buscar_por_id(dto.usuario_id)
+        if not usuario:
+            raise ValueError(f"Usuário não encontrado: {dto.usuario_id}")
+        
+        # Criar doação
+        doacao = Doacao(
+            id="",  # Será gerado automaticamente
+            livro_id=dto.livro_id,
+            usuario_id=dto.usuario_id,
+            data_doacao=None,  # Será definida automaticamente
+            creditos=dto.creditos
+        )
+        
+        # Salvar no repositório
+        self._doacao_repository.salvar(doacao)
+        
+        return doacao.creditos
