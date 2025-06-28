@@ -1,15 +1,10 @@
-#!/bin/bash
 
-# Script para build e execução da aplicação com Docker
-# Demonstração de automação de deploy
-
-echo "🐳 Iniciando containerização da API da Biblioteca..."
+echo "🐳 Comando do Professor Victor Para Facilitar Docker Run"
 echo "📚 Demonstração de Clean Architecture + SOLID + Design Patterns + DDD"
 
-# Criar diretório para dados se não existir
 mkdir -p data
 
-echo "🔨 Fazendo build da imagem Docker..."
+echo "🔨 Alunos - Montando a build da imagem Docker..."
 docker build -t biblioteca-api:latest .
 
 if [ $? -eq 0 ]; then
