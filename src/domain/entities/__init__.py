@@ -44,7 +44,6 @@ class Livro:
             return False
         return self.id == other.id
 
-
 @dataclass
 class Usuario:
     """
@@ -77,7 +76,6 @@ class Usuario:
         if not isinstance(other, Usuario):
             return False
         return self.id == other.id
-
 
 @dataclass
 class Emprestimo:
@@ -160,3 +158,33 @@ class Doacao:
 
     def processar_creditos(self) -> None:
         self.creditos += 20.0  # Exemplo: cada doação gera 20 créditos para o usuário
+
+@dataclass
+class Horas:
+    """
+    Entity: Doacao
+    Representa uma doação de livro.
+    """
+    id: str
+    usuario_id: str
+    horas: int
+    data: datetime
+    tipo: str
+    creditos: float = 0.0
+
+    def __post_init__(self):
+        if not self.id:
+            self.id = str(uuid4())
+        if not self.data:
+            self.data = datetime.now()
+    
+    def gerar_creditos(self) -> None:
+        """
+        Regra de negócio: Gerar créditos com base nas horas registradas
+        """
+        if self.tipo == 'organização':
+            self.creditos += (self.horas * 5.0)  # Exemplo: cada hora gera 5 créditos para o usuário
+        elif self.tipo == 'palestra':
+            self.creditos += (self.horas * 10.0) # Exemplo: cada hora de palestra gera 10 créditos para o usuário
+        else:
+            self.creditos += (self.horas * 2.0)  # Exemplo: cada hora de outra atividade gera 2 créditos para o usuário

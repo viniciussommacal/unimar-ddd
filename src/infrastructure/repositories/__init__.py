@@ -1,11 +1,11 @@
 # Infrastructure Layer - Repository Implementations
 
 from typing import List, Optional
-from src.domain.entities import Livro, Usuario, Emprestimo, Doacao
-from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository
+from src.domain.entities import Livro, Usuario, Emprestimo, Doacao, Horas
+from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository, HorasRepository
 from src.domain.value_objects.isbn import ISBN
 from src.domain.value_objects.email import Email
-from src.infrastructure.database.models import LivroModel, UsuarioModel, EmprestimoModel, DoacaoModel
+from src.infrastructure.database.models import LivroModel, UsuarioModel, EmprestimoModel, DoacaoModel, HorasModel
 from src.models.user import db
 from datetime import datetime
 
@@ -295,3 +295,65 @@ class SQLAlchemyDoacaoRepository(DoacaoRepository):
         if doacao_model:
             db.session.delete(doacao_model)
             db.session.commit
+
+class SQLAlchemyHorasRepository(HorasRepository):
+    """
+    Implementação concreta do HorasRepository usando SQLAlchemy
+    """
+    def salvar(self, horas: Horas) -> None:
+        """Salva horas no banco de dados"""
+        horas_model = HorasModel.query.filter_by(id=horas.id).first()
+        
+        if horas_model:
+            # Atualizar existente
+            horas_model.usuario_id = horas.usuario_id
+            horas_model.horas = horas.horas
+            horas_model.data = horas.data
+            horas_model.creditos = horas.creditos
+        else:
+            # Criar novo
+            horas_model = HorasModel(
+                id=horas.id,
+                usuario_id=horas.usuario_id,
+                horas=horas.horas,
+                data=horas.data,
+                creditos=horas.creditos
+            )
+            db.session.add(horas_model)
+        
+        db.session.commit()
+    
+    def buscar_por_id(self, id: str) -> Horas:
+        """Busca horas por ID"""
+        horas_model = HorasModel.query.filter_by(id=id).first()
+        if not horas_model:
+            return None
+        
+        return self._model_para_entidade(horas_model)
+    
+    def buscar_por_usuario(self, usuario_id: str) -> List[Horas]:
+        """Busca horas de um usuário"""
+        horas_model = HorasModel.query.filter_by(usuario_id=usuario_id).all()
+        return [self._model_para_entidade(h) for h in horas_model]
+    
+    def buscar_todos(self) -> List[Horas]:
+        """Busca todas as horas"""
+        horas_model = HorasModel.query.all()
+        return [self._model_para_entidade(h) for h in horas_model]
+    
+    def deletar(self, id: str) -> None:
+        """Deleta uma entrada de horas"""
+        horas_model = HorasModel.query.filter_by(id=id).first()
+        if horas_model:
+            db.session.delete(horas_model)
+            db.session.commit()
+    
+    def _model_para_entidade(self, horas_model: HorasModel) -> Horas:
+        """Converte model para entidade de domínio"""
+        return Horas(
+            id=horas_model.id,
+            usuario_id=horas_model.usuario_id,
+            horas=horas_model.horas,
+            data=horas_model.data,
+            creditos=horas_model.creditos
+        )

@@ -75,3 +75,18 @@ class DoacaoModel(db.Model):
     def __repr__(self):
         return f'<Doacao {self.id}>'    
 
+class HorasModel(db.Model):
+    """
+    Model SQLAlchemy para Horas
+    """
+    __tablename__ = 'horas'
+    id = db.Column(db.String(36), primary_key=True)
+    usuario_id = db.Column(db.String(36), db.ForeignKey('usuarios.id'), nullable=False)
+    horas = db.Column(db.Float, default=0.0, nullable=False)
+    data = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    creditos = db.Column(db.Float, default=0.0, nullable=False)
+    
+    # Relacionamentos
+    usuario = db.relationship('UsuarioModel', backref='horas')
+    def __repr__(self):
+        return f'<Horas {self.id}>'
