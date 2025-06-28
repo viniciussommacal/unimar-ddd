@@ -1,25 +1,7 @@
-# 📁 Estrutura Completa do Repositório
+# 📁 Estrutura Completa do Repositório (Estrutura de Arquivos Unimar - DDD)
 
 ```
-projeto-repositorio/                    # 📂 Repositório principal
-├── 📄 README.md                       # Documentação principal
-├── 📄 LICENSE                         # Licença MIT
-├── 📄 .gitignore                      # Arquivos ignorados pelo Git
-│
-├── 📊 apresentacao/                   # Slides educacionais
-│   ├── introducao.html               # Slide 1: Introdução
-│   ├── clean_architecture.html      # Slide 2: Clean Architecture
-│   ├── solid_principles.html        # Slide 3: Princípios SOLID
-│   ├── design_patterns.html         # Slide 4: Design Patterns
-│   ├── ddd_introducao.html          # Slide 5: DDD Introdução
-│   ├── ddd_padroes.html             # Slide 6: DDD Padrões
-│   ├── projeto_pratico.html         # Slide 7: Projeto Prático
-│   ├── implementacao_api.html       # Slide 8: Implementação
-│   ├── docker_containerizacao.html  # Slide 9: Docker
-│   ├── conclusao.html               # Slide 10: Conclusão
-│   ├── Perfil.png                   # Foto do instrutor
-│   └── Logo.png                     # Logo Icoma Education
-│
+
 ├── 🚀 api/                           # API REST com Clean Architecture
 │   ├── 📄 README.md                 # Documentação da API
 │   ├── 📄 README-Docker.md          # Guia Docker
@@ -51,161 +33,221 @@ projeto-repositorio/                    # 📂 Repositório principal
 │       ├── 📁 models/               # Compatibilidade
 │       ├── 📁 routes/               # Compatibilidade
 │       └── 📁 database/             # Banco de dados SQLite
-│
-├── 📖 docs/                          # Documentação completa
-│   ├── TUTORIAL_PASSO_A_PASSO.md    # Tutorial completo (50+ páginas)
-│   ├── CHECKLIST_IMPLEMENTACAO.md   # Lista de verificação
-│   ├── GUIA_INSTALACAO.md           # Instalação detalhada
-│   └── ESTRUTURA_REPOSITORIO.md     # Este arquivo
-│
-├── 🎬 assets/                        # Recursos multimídia
-│   ├── 📄 README.md                 # Documentação dos assets
-│   ├── 🎥 apresentacao_completa.mp4 # Vídeo completo (30s)
-│   ├── 🎥 intro_video.mp4           # Introdução
-│   ├── 🎥 clean_arch_video.mp4      # Clean Architecture
-│   ├── 🎥 solid_video.mp4           # Princípios SOLID
-│   ├── 🎥 ddd_video.mp4             # Domain-Driven Design
-│   ├── 🎥 api_demo_video.mp4        # Demo da API
-│   ├── 🎥 conclusion_video.mp4      # Conclusão
-│   ├── 🖼️ background_tech.png       # Fundo tecnológico
-│   ├── 🖼️ clean_arch_diagram.png    # Diagrama Clean Architecture
-│   ├── 🖼️ solid_principles.png      # Infográfico SOLID
-│   ├── 🖼️ ddd_concept.png           # Conceitos DDD
-│   └── 🖼️ api_demo.png              # Demo visual da API
-│
-├── 🔧 scripts/                       # Scripts de automação
-│   ├── 📄 README.md                 # Documentação dos scripts
-│   ├── 🚀 criar_projeto.sh          # Cria projeto do zero
-│   └── ⚡ install.sh                # Instalação automática
-│
-└── 💡 examples/                      # Exemplos de código
-    ├── 📄 README.md                 # Documentação dos exemplos
-    ├── 📄 livro_completo.py         # Entity Livro completa
-    ├── 📄 livro_tutorial.py         # Entity Livro simplificada
-    ├── 📄 usuario_completo.py       # Entity Usuario completa
-    └── 📄 usuario_tutorial.py       # Entity Usuario simplificada
+
+# 🐳 Containerização da API da Biblioteca
+
+## Demonstração de Docker com Clean Architecture + DDD
+
+Este diretório contém todos os arquivos necessários para containerizar a API da Biblioteca, demonstrando como aplicar Docker em uma aplicação que segue Clean Architecture, SOLID, Design Patterns e DDD.
+
+## 📁 Arquivos Docker Criados
+
+### 1. `Dockerfile`
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY src/ ./src/
+COPY test_structure.py .
+RUN mkdir -p src/database
+EXPOSE 5001
+ENV FLASK_APP=src/main.py
+ENV FLASK_ENV=production
+ENV PYTHONPATH=/app
+CMD ["python", "src/main.py"]
 ```
 
-## 📊 **Estatísticas do Repositório**
+### 2. `docker-compose.yml` (Completo)
+- API da Biblioteca
+- PostgreSQL
+- Adminer (interface web para DB)
+- Rede isolada
+- Volumes persistentes
 
-- **📁 Total de arquivos**: 2.443
-- **📄 Arquivos Markdown**: 12
-- **🐍 Arquivos Python**: 15+ (código principal)
-- **🎬 Vídeos**: 6 (MP4)
-- **🖼️ Imagens**: 8 (PNG)
-- **📊 Slides HTML**: 10
-- **🔧 Scripts**: 2 (Shell)
-- **🐳 Docker**: 4 arquivos
-- **📖 Documentação**: 200+ páginas
+### 3. `docker-compose.dev.yml` (Simplificado)
+- Apenas a API com SQLite
+- Ideal para desenvolvimento
+- Volume para persistência de dados
 
-## 🎯 **Organização por Propósito**
+### 4. `docker-run.sh`
+Script de automação que:
+- Faz build da imagem
+- Inicia os containers
+- Mostra URLs e comandos úteis
+- Testa a API automaticamente
 
-### 📚 **Educacional**
-- `apresentacao/` - Slides para aulas
-- `docs/` - Tutoriais e guias
-- `examples/` - Código para estudo
-- `assets/` - Material visual
+### 5. `.dockerignore`
+Otimiza o build ignorando:
+- Ambiente virtual Python
+- Arquivos de cache
+- Dados locais
+- Logs e temporários
 
-### 💻 **Técnico**
-- `api/` - Código da aplicação
-- `scripts/` - Automação
-- Arquivos de configuração (Docker, Git)
+## 🚀 Como Usar
 
-### 🎬 **Multimídia**
-- Vídeos educacionais
-- Diagramas e infográficos
-- Assets visuais
-
-## 🔍 **Navegação Rápida**
-
-### **Para Começar**
-1. 📄 `README.md` - Visão geral
-2. 📖 `docs/GUIA_INSTALACAO.md` - Como instalar
-3. 🚀 `scripts/criar_projeto.sh` - Criar do zero
-
-### **Para Estudar**
-1. 📊 `apresentacao/` - Conceitos visuais
-2. 📖 `docs/TUTORIAL_PASSO_A_PASSO.md` - Tutorial completo
-3. 💡 `examples/` - Código de exemplo
-
-### **Para Implementar**
-1. 🚀 `api/src/` - Código fonte
-2. 📖 `docs/CHECKLIST_IMPLEMENTACAO.md` - Lista de tarefas
-3. 🔧 `scripts/` - Automação
-
-### **Para Ensinar**
-1. 📊 `apresentacao/` - Slides prontos
-2. 🎬 `assets/` - Vídeos e imagens
-3. 📖 `docs/` - Material de apoio
-
-## 🎓 **Uso Recomendado**
-
-### **Estudantes**
+### Opção 1: Script Automatizado
 ```bash
-# 1. Clonar repositório
-git clone <repositorio>
-
-# 2. Estudar conceitos
-open apresentacao/introducao.html
-
-# 3. Seguir tutorial
-open docs/TUTORIAL_PASSO_A_PASSO.md
-
-# 4. Praticar com exemplos
-cd examples && python livro_tutorial.py
-
-# 5. Implementar projeto
-cd api && ./install.sh
+chmod +x docker-run.sh
+./docker-run.sh
 ```
 
-### **Instrutores**
+### Opção 2: Comandos Manuais
 ```bash
-# 1. Preparar material
-cp -r apresentacao/ minha-aula/
-cp -r assets/ minha-aula/
+# Build da imagem
+docker build -t biblioteca-api:latest .
 
-# 2. Personalizar slides
-# Editar apresentacao/*.html
+# Executar com docker-compose
+docker-compose -f docker-compose.dev.yml up -d
 
-# 3. Preparar ambiente para alunos
-./scripts/criar_projeto.sh
+# Ver logs
+docker-compose -f docker-compose.dev.yml logs -f
 
-# 4. Distribuir projeto base
-tar -czf projeto-alunos.tar.gz api/
+# Parar containers
+docker-compose -f docker-compose.dev.yml down
 ```
 
-### **Desenvolvedores**
+### Opção 3: Docker Run Simples
 ```bash
-# 1. Estudar arquitetura
-cd api/src && find . -name "*.py" -exec head -20 {} \;
-
-# 2. Executar projeto
-cd api && docker-compose up
-
-# 3. Testar API
-curl http://localhost:5001/api/health
-
-# 4. Modificar e expandir
-# Implementar novas features
+docker run -d -p 5001:5001 --name biblioteca-api biblioteca-api:latest
 ```
 
-## 🔄 **Atualizações Futuras**
+## 🌐 Endpoints Disponíveis
 
-### **Planejadas**
-- [ ] Testes unitários completos
-- [ ] Frontend React/Vue
-- [ ] Deploy automatizado
-- [ ] Mais exemplos de DDD
-- [ ] Tradução para inglês
+Após iniciar o container:
 
-### **Sugestões**
-- Microserviços
-- Event Sourcing
-- CQRS
-- GraphQL API
-- Kubernetes
+- **API Base**: http://localhost:5001
+- **Documentação**: http://localhost:5001/api/docs
+- **Health Check**: http://localhost:5001/api/biblioteca/health
+- **Adminer** (se usando compose completo): http://localhost:8080
+
+## 🧪 Testando a API
+
+```bash
+# Health check
+curl http://localhost:5001/api/biblioteca/health
+
+# Criar livro
+curl -X POST http://localhost:5001/api/biblioteca/livros \
+  -H "Content-Type: application/json" \
+  -d '{"titulo":"Clean Architecture","autor":"Robert Martin","isbn":"978-0134494166"}'
+
+# Listar livros
+curl http://localhost:5001/api/biblioteca/livros
+```
+
+## 🏗️ Benefícios da Containerização
+
+### 1. **Consistência de Ambiente**
+- Mesmo ambiente em desenvolvimento, teste e produção
+- Elimina problemas de "funciona na minha máquina"
+
+### 2. **Isolamento**
+- Aplicação isolada do sistema host
+- Dependências encapsuladas
+- Sem conflitos entre projetos
+
+### 3. **Portabilidade**
+- Roda em qualquer sistema com Docker
+- Fácil deploy em cloud (AWS, Azure, GCP)
+- Kubernetes ready
+
+### 4. **Escalabilidade**
+- Fácil replicação de containers
+- Load balancing automático
+- Auto-scaling baseado em métricas
+
+### 5. **Versionamento**
+- Controle de versões das imagens
+- Rollback rápido em caso de problemas
+- Tags semânticas (v1.0.0, latest, etc.)
+
+### 6. **Desenvolvimento**
+- Setup rápido para novos desenvolvedores
+- Ambiente padronizado para toda equipe
+- Integração com CI/CD
+
+## 🔧 Configurações Avançadas
+
+### Variáveis de Ambiente
+```bash
+# Produção
+FLASK_ENV=production
+DATABASE_URL=postgresql://user:pass@db:5432/biblioteca
+
+# Desenvolvimento
+FLASK_ENV=development
+DEBUG=true
+```
+
+### Volumes
+```yaml
+volumes:
+  - ./data:/app/src/database  # Persistência SQLite
+  - postgres_data:/var/lib/postgresql/data  # Persistência PostgreSQL
+```
+
+### Networks
+```yaml
+networks:
+  biblioteca-network:
+    driver: bridge
+```
+
+## 📊 Monitoramento
+
+### Logs
+```bash
+# Logs em tempo real
+docker-compose logs -f biblioteca-api
+
+# Logs específicos
+docker logs biblioteca-api-container
+```
+
+### Métricas
+```bash
+# Status dos containers
+docker-compose ps
+
+# Uso de recursos
+docker stats biblioteca-api-container
+```
+
+## 🔒 Segurança
+
+### Boas Práticas Implementadas
+- Usuário não-root no container
+- Imagem base oficial e atualizada
+- Secrets via environment variables
+- Network isolation
+- Volume permissions
+
+### Melhorias para Produção
+- Multi-stage build para reduzir tamanho
+- Health checks customizados
+- Resource limits (CPU/Memory)
+- Security scanning das imagens
+- HTTPS com certificados
+
+## 🎯 Demonstração dos Conceitos
+
+Esta containerização demonstra na prática:
+
+1. **Clean Architecture**: Separação clara entre camadas, facilitando testes e deploy
+2. **SOLID**: Dependency injection funciona perfeitamente em containers
+3. **Design Patterns**: Repository pattern permite trocar banco facilmente
+4. **DDD**: Domínio isolado e testável independente da infraestrutura
+
+## 📚 Próximos Passos
+
+1. **Kubernetes**: Deploy em cluster
+2. **CI/CD**: Pipeline automatizado
+3. **Monitoring**: Prometheus + Grafana
+4. **Logging**: ELK Stack
+5. **Security**: Vault para secrets
 
 ---
 
-**💡 Esta estrutura foi projetada para ser educacional, prática e profissional ao mesmo tempo!**
+**Resultado**: Uma aplicação completa que demonstra todos os conceitos estudados, containerizada e pronta para produção! 🚀
 
