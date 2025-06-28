@@ -30,6 +30,7 @@ class UsuarioModel(db.Model):
     id = db.Column(db.String(36), primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    creditos = db.Column(db.Float, default=0.0, nullable=False)
     ativo = db.Column(db.Boolean, default=True, nullable=False)
     
     def __repr__(self):

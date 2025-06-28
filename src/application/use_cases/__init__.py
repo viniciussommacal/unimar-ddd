@@ -159,10 +159,12 @@ class DevolverLivroUseCase:
     def __init__(
         self,
         livro_repository: LivroRepository,
-        emprestimo_repository: EmprestimoRepository
+        emprestimo_repository: EmprestimoRepository,
+        usuario_repository: UsuarioRepository
     ):
         self._livro_repository = livro_repository
         self._emprestimo_repository = emprestimo_repository
+        self._usuario_repository = usuario_repository
     
     def executar(self, emprestimo_id: str) -> float:
         """
@@ -178,6 +180,10 @@ class DevolverLivroUseCase:
         livro = self._livro_repository.buscar_por_id(emprestimo.livro_id)
         if not livro:
             raise ValueError(f"Livro não encontrado: {emprestimo.livro_id}")
+        # Buscar Usuário
+        usuario = self._usuario_repository.buscar_por_id(emprestimo.usuario_id)
+        if not usuario:
+            raise ValueError(f"Usuário não encontrado: {emprestimo.usuario_id}")
         
         # Devolver livro (regras de domínio)
         emprestimo.devolver()
@@ -186,8 +192,13 @@ class DevolverLivroUseCase:
         # Salvar alterações
         self._emprestimo_repository.salvar(emprestimo)
         self._livro_repository.salvar(livro)
-        
-        return emprestimo.multa
+
+        if usuario.creditos < emprestimo.multa:
+            return emprestimo.multa
+        else:
+            usuario.creditos -= emprestimo.multa
+            self._usuario_repository.salvar(usuario)
+            return usuario.creditos
 
 class ListarEmprestimosUseCase:
     """
@@ -264,5 +275,9 @@ class DoarLivroUseCase:
         
         # Salvar no repositório
         self._doacao_repository.salvar(doacao)
+
+        # Atualizar créditos do usuário
+        usuario.creditos += doacao.creditos
+        self._usuario_repository.salvar(usuario)
         
-        return doacao.creditos
+        return usuario.creditos
