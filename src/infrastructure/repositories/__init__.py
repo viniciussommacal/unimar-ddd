@@ -1,11 +1,11 @@
 # Infrastructure Layer - Repository Implementations
 
 from typing import List, Optional
-from src.domain.entities import Livro, Usuario, Emprestimo, Doacao, Horas
-from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository, HorasRepository
+from src.domain.entities import Livro, Usuario, Emprestimo, Doacao, Horas, Avaliacao
+from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository, HorasRepository, AvaliacaoRepository
 from src.domain.value_objects.isbn import ISBN
 from src.domain.value_objects.email import Email
-from src.infrastructure.database.models import LivroModel, UsuarioModel, EmprestimoModel, DoacaoModel, HorasModel
+from src.infrastructure.database.models import LivroModel, UsuarioModel, EmprestimoModel, DoacaoModel, HorasModel, AvaliacaoModel
 from src.models.user import db
 from datetime import datetime
 
@@ -336,7 +336,7 @@ class SQLAlchemyHorasRepository(HorasRepository):
         horas_model = HorasModel.query.filter_by(usuario_id=usuario_id).all()
         return [self._model_para_entidade(h) for h in horas_model]
     
-    def buscar_todos(self) -> List[Horas]:
+    def buscar_todas(self) -> List[Horas]:
         """Busca todas as horas"""
         horas_model = HorasModel.query.all()
         return [self._model_para_entidade(h) for h in horas_model]
@@ -356,4 +356,82 @@ class SQLAlchemyHorasRepository(HorasRepository):
             horas=horas_model.horas,
             data=horas_model.data,
             creditos=horas_model.creditos
+        )
+    
+class SQLAlchemyAvaliacaoRepository(AvaliacaoRepository):
+    """
+    Implementação concreta do AvaliacaoRepository usando SQLAlchemy
+    """
+
+    def salvar(self, avaliacao: Avaliacao) -> None:
+        """Salva uma avaliação no banco de dados"""
+        avaliacao_model = AvaliacaoModel.query.filter_by(id=avaliacao.id).first()
+
+        if avaliacao_model:
+            # Atualizar existente
+            avaliacao_model.livro_id = avaliacao.livro_id
+            avaliacao_model.usuario_id = avaliacao.usuario_id
+            avaliacao_model.nota = avaliacao.nota.valor
+            avaliacao_model.comentario = str(avaliacao.comentario)
+            avaliacao_model.publica = avaliacao.publica
+            avaliacao_model.data = avaliacao.data
+        else:
+            # Criar novo
+            avaliacao_model = AvaliacaoModel(
+                id=avaliacao.id,
+                livro_id=avaliacao.livro_id,
+                usuario_id=avaliacao.usuario_id,
+                nota=avaliacao.nota.valor,
+                comentario=str(avaliacao.comentario),
+                publica=avaliacao.publica,
+                data=avaliacao.data,
+            )
+            db.session.add(avaliacao_model)
+
+        db.session.commit()
+
+    def buscar_por_id(self, id: str) -> Optional[Avaliacao]:
+        """Busca avaliação por ID"""
+        avaliacao_model = AvaliacaoModel.query.filter_by(id=id).first()
+        if not avaliacao_model:
+            return None
+        return self._model_para_entidade(avaliacao_model)
+
+    def buscar_por_usuario(self, usuario_id: str) -> List[Avaliacao]:
+        """Busca avaliações de um usuário"""
+        avaliacoes_model = AvaliacaoModel.query.filter_by(usuario_id=usuario_id).all()
+        return [self._model_para_entidade(av) for av in avaliacoes_model]
+
+    def buscar_por_livro(self, livro_id: str) -> List[Avaliacao]:
+        """Busca avaliações de um livro"""
+        avaliacoes_model = AvaliacaoModel.query.filter_by(livro_id=livro_id).all()
+        return [self._model_para_entidade(av) for av in avaliacoes_model]
+
+    def buscar_publicas_por_livro(self, livro_id: str) -> List[Avaliacao]:
+        """Busca avaliações públicas de um livro"""
+        avaliacoes_model = AvaliacaoModel.query.filter_by(livro_id=livro_id, publica=True).all()
+        return [self._model_para_entidade(av) for av in avaliacoes_model]
+
+    def buscar_todas(self) -> List[Avaliacao]:
+        """Busca todas as avaliações"""
+        avaliacoes_model = AvaliacaoModel.query.all()
+        return [self._model_para_entidade(av) for av in avaliacoes_model]
+
+    def deletar(self, id: str) -> None:
+        """Deleta uma avaliação"""
+        avaliacao_model = AvaliacaoModel.query.filter_by(id=id).first()
+        if avaliacao_model:
+            db.session.delete(avaliacao_model)
+            db.session.commit()
+
+    def _model_para_entidade(self, avaliacao_model: AvaliacaoModel) -> Avaliacao:
+        """Converte model para entidade de domínio"""
+        return Avaliacao(
+            id=avaliacao_model.id,
+            livro_id=avaliacao_model.livro_id,
+            usuario_id=avaliacao_model.usuario_id,
+            nota=avaliacao_model.nota,
+            comentario=avaliacao_model.comentario,
+            publica=avaliacao_model.publica,
+            data=avaliacao_model.data,
         )

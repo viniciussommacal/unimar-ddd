@@ -1,11 +1,11 @@
 # Application Layer - Use Cases
 
 from typing import List, Optional
-from src.domain.entities import Livro, Usuario, Emprestimo, Doacao, Horas
-from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository, HorasRepository
+from src.domain.entities import Livro, Usuario, Emprestimo, Doacao, Horas, Avaliacao
+from src.domain.repositories import LivroRepository, UsuarioRepository, EmprestimoRepository, DoacaoRepository, HorasRepository, AvaliacaoRepository
 from src.domain.value_objects.isbn import ISBN
 from src.domain.value_objects.email import Email
-from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoDTO, DoacaoDTO, HorasDTO
+from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoDTO, DoacaoDTO, HorasDTO, AvaliacaoDTO
 
 class CriarLivroUseCase:
     """
@@ -320,3 +320,46 @@ class DoarHorasUseCase:
         self._usuario_repository.salvar(usuario)
         
         return usuario.creditos
+    
+class RegistrarAvaliacaoUseCase:
+    """
+    Use Case: Registrar Avaliação
+    """
+
+    def __init__(
+        self,
+        avaliacao_repository: AvaliacaoRepository,
+        livro_repository: LivroRepository,
+        usuario_repository: UsuarioRepository
+    ):
+        self._avaliacao_repository = avaliacao_repository
+        self._livro_repository = livro_repository
+        self._usuario_repository = usuario_repository
+
+    def executar(self, dto: AvaliacaoDTO) -> str:
+        """
+        Registra uma avaliação
+        Retorna o ID da avaliação criada
+        """
+        # Validar se livro existe
+        livro = self._livro_repository.buscar_por_id(dto.livro_id)
+        if not livro:
+            raise ValueError(f"Livro não encontrado: {dto.livro_id}")
+
+        # Validar se usuário existe
+        usuario = self._usuario_repository.buscar_por_id(dto.usuario_id)
+        if not usuario:
+            raise ValueError(f"Usuário não encontrado: {dto.usuario_id}")
+
+        avaliacao = Avaliacao(
+            id="",  # Será gerado automaticamente
+            livro_id=dto.livro_id,
+            usuario_id=dto.usuario_id,
+            nota=dto.nota,
+            comentario=dto.comentario,
+            publica=dto.publica,
+        )
+
+        self._avaliacao_repository.salvar(avaliacao)
+
+        return avaliacao.id

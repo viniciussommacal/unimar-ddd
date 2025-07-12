@@ -75,6 +75,11 @@ class DoacaoModel(db.Model):
     def __repr__(self):
         return f'<Doacao {self.id}>'    
 
+# Infrastructure Layer - Database Models
+
+from src.models.user import db
+from datetime import datetime
+
 class HorasModel(db.Model):
     """
     Model SQLAlchemy para Horas
@@ -90,3 +95,24 @@ class HorasModel(db.Model):
     usuario = db.relationship('UsuarioModel', backref='horas')
     def __repr__(self):
         return f'<Horas {self.id}>'
+
+class AvaliacaoModel(db.Model):
+    """
+    Model SQLAlchemy para Avaliação
+    """
+    __tablename__ = 'avaliacoes'
+
+    id = db.Column(db.String(36), primary_key=True)
+    livro_id = db.Column(db.String(36), db.ForeignKey('livros.id'), nullable=False)
+    usuario_id = db.Column(db.String(36), db.ForeignKey('usuarios.id'), nullable=False)
+    nota = db.Column(db.Integer, nullable=False)
+    comentario = db.Column(db.Text, nullable=False)
+    publica = db.Column(db.Boolean, default=True, nullable=False)
+    data = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relacionamentos
+    livro = db.relationship('LivroModel', backref='avaliacoes')
+    usuario = db.relationship('UsuarioModel', backref='avaliacoes')
+
+    def __repr__(self):
+        return f'<Avaliacao {self.id}>'

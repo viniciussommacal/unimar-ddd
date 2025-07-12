@@ -178,3 +178,13 @@ class HorasDTO:
     id: Optional[str] = None
     data: Optional[datetime] = None
     creditos: Optional[float] = None
+
+class AvaliacaoDTO:
+    """
+    DTO para requisição de registro de avaliação
+    """
+    livro_id: str
+    usuario_id: str
+    nota: int
+    comentario: str
+    publica: Optional[bool] = True

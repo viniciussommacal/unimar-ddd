@@ -6,6 +6,8 @@ from typing import Optional
 from dataclasses import dataclass
 from src.domain.value_objects.isbn import ISBN
 from src.domain.value_objects.email import Email
+from src.domain.value_objects.nota import Nota
+from src.domain.value_objects.comentario import Comentario
 
 
 @dataclass
@@ -188,3 +190,29 @@ class Horas:
             self.creditos += (self.horas * 10.0) # Exemplo: cada hora de palestra gera 10 créditos para o usuário
         else:
             self.creditos += (self.horas * 2.0)  # Exemplo: cada hora de outra atividade gera 2 créditos para o usuário
+
+@dataclass
+class Avaliacao:
+    """
+    Entity: Avaliacao
+    Representa uma avaliacao de um livro.
+    """
+    id: str
+    livro_id: str
+    usuario_id: str
+    nota: Nota
+    comentario: Comentario
+    publica: bool = True
+    data: datetime = datetime.now()
+
+    def __post_init__(self):
+        if not self.id:
+            self.id = str(uuid4())
+        if not self.data:
+            self.data = datetime.now()
+
+    def esconder(self) -> None:
+        self.publica = False
+
+    def exibir(self) -> None:
+        self.publica = True

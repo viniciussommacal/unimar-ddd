@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from src.domain.entities import Livro, Usuario, Emprestimo, Doacao, Horas
+from src.domain.entities import Livro, Usuario, Emprestimo, Doacao, Horas, Avaliacao
 
 
 class LivroRepository(ABC):
@@ -168,4 +168,38 @@ class HorasRepository(ABC):
     @abstractmethod
     def deletar(self, id: str) -> None:
         """Deleta uma hora"""
+        pass
+
+class AvaliacaoRepository(ABC):
+    """
+    Repository Interface para Avaliacao
+    """
+    @abstractmethod
+    def salvar(self, avaliacao: Avaliacao) -> None:
+        """Salva uma avaliação"""
+        pass
+
+    @abstractmethod
+    def buscar_por_id(self, id: str) -> Avaliacao:
+        """Busca uma avaliação por ID"""
+        pass
+
+    @abstractmethod
+    def buscar_por_usuario(self, usuario_id: str) -> List[Avaliacao]:
+        """Busca avaliações feitas por um usuário"""
+        pass
+
+    @abstractmethod
+    def buscar_por_livro(self, livro_id: str) -> List[Avaliacao]:
+        """Busca avaliações feitas para um livro"""
+        pass
+
+    @abstractmethod
+    def buscar_todas(self) -> List[Avaliacao]:
+        """Busca todas as avaliações"""
+        pass
+
+    @abstractmethod
+    def deletar(self, id: str) -> None:
+        """Deleta uma avaliação"""
         pass

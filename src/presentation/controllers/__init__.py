@@ -3,11 +3,13 @@
 from flask import Blueprint, request, jsonify
 from src.application.use_cases import (
     CriarLivroUseCase, BuscarLivrosUseCase, CriarUsuarioUseCase,
-    EmprestarLivroUseCase, DevolverLivroUseCase, ListarEmprestimosUseCase, DoarLivroUseCase, DoarHorasUseCase
+    EmprestarLivroUseCase, DevolverLivroUseCase, ListarEmprestimosUseCase, 
+    DoarLivroUseCase, DoarHorasUseCase, RegistrarAvaliacaoUseCase
 )
-from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoRequestDTO, DevolucaoRequestDTO, DoacaoDTO, HorasDTO
+from src.application.dtos import LivroDTO, UsuarioDTO, EmprestimoRequestDTO, DevolucaoRequestDTO, DoacaoDTO, HorasDTO, AvaliacaoDTO
 from src.infrastructure.repositories import (
-    SQLAlchemyLivroRepository, SQLAlchemyUsuarioRepository, SQLAlchemyEmprestimoRepository, SQLAlchemyDoacaoRepository, SQLAlchemyHorasRepository
+    SQLAlchemyLivroRepository, SQLAlchemyUsuarioRepository, SQLAlchemyEmprestimoRepository, 
+    SQLAlchemyDoacaoRepository, SQLAlchemyHorasRepository, SQLAlchemyAvaliacaoRepository
 )
 
 # Criar blueprint para a API da biblioteca
@@ -19,6 +21,7 @@ usuario_repository = SQLAlchemyUsuarioRepository()
 emprestimo_repository = SQLAlchemyEmprestimoRepository()
 doacao_repository = SQLAlchemyDoacaoRepository()
 horas_repository = SQLAlchemyHorasRepository()
+avaliacao_repository = SQLAlchemyAvaliacaoRepository()
 
 @biblioteca_bp.route('/livros', methods=['POST'])
 def criar_livro():
@@ -258,6 +261,79 @@ def doar_horas():
         return jsonify({'erro': str(e)}), 400
     except Exception as e:
         return jsonify({'erro': 'Erro interno do servidor'}), 500   
+    
+@biblioteca_bp.route('/avaliacoes', methods=['POST'])
+def registrar_avaliacao():
+    """
+    Endpoint para registrar uma avaliação
+    """
+    try:
+        data = request.get_json()
+
+        if not data or not all(k in data for k in ('livro_id', 'usuario_id', 'nota', 'comentario')):
+            return jsonify({'erro': 'Campos obrigatórios: livro_id, usuario_id, nota, comentario'}), 400
+
+        dto = AvaliacaoDTO(
+            livro_id=data['livro_id'],
+            usuario_id=data['usuario_id'],
+            nota=data['nota'],
+            comentario=data['comentario'],
+            publica=data.get('publica', True)
+        )
+
+        use_case = RegistrarAvaliacaoUseCase(
+            avaliacao_repository,
+            livro_repository,
+            usuario_repository
+        )
+
+        avaliacao_id = use_case.executar(dto)
+
+        return jsonify({
+            'mensagem': 'Avaliação registrada com sucesso',
+            'avaliacao_id': avaliacao_id
+        }), 201
+
+    except ValueError as e:
+        return jsonify({'erro': str(e)}), 400
+    except Exception:
+        return jsonify({'erro': 'Erro interno do servidor'}), 500
+    
+@biblioteca_bp.route('/avaliacoes', methods=['GET'])
+def listar_avaliacoes():
+    """
+    Endpoint para listar avaliações
+    """
+    try:
+        usuario_id = request.args.get('usuario_id')
+        livro_id = request.args.get('livro_id')
+
+        if usuario_id:
+            avaliacoes = avaliacao_repository.buscar_por_usuario(usuario_id)
+        elif livro_id:
+            avaliacoes = avaliacao_repository.buscar_por_livro(livro_id)
+            # Apenas públicas
+            avaliacoes = [a for a in avaliacoes if a.publica]
+        else:
+            return jsonify({'erro': 'Informe usuario_id ou livro_id para efetuar uma busca'}), 400
+
+        avaliacoes_dict = [{
+            'id': a.id,
+            'livro_id': a.livro_id,
+            'usuario_id': a.usuario_id,
+            'nota': a.nota.valor,
+            'comentario': str(a.comentario),
+            'data': a.data.isoformat(),
+            'publica': a.publica
+        } for a in avaliacoes]
+
+        return jsonify({
+            'avaliacoes': avaliacoes_dict,
+            'total': len(avaliacoes_dict)
+        }), 200
+
+    except Exception:
+        return jsonify({'erro': 'Erro interno do servidor'}), 500
 
 @biblioteca_bp.route('/health', methods=['GET'])
 def health_check():
